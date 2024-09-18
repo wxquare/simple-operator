@@ -18,6 +18,7 @@ package controller
 
 import (
 	"context"
+	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -47,11 +48,40 @@ type CronJobReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.19.0/pkg/reconcile
 func (r *CronJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	log := log.FromContext(ctx)
 
 	// TODO(user): your logic here
+	// log := log.FromContext(ctx)
 
-	return ctrl.Result{}, nil
+	// TODO(user): your logic here
+	log.Info("my operator Reconcile called", "time", time.Now().Local().Hour())
+
+	// var cronJob v1.CronJob
+	// if err := r.Get(ctx, req.NamespacedName, &cronJob); err != nil {
+	// 	log.Error(err, "unable to fetch CronJob")
+	// 	return ctrl.Result{RequeueAfter: 10 * time.Second}, client.IgnoreNotFound(err)
+	// }
+	// // startTime := cronJob.Spec.Start
+	// // endTime := cronJob.Spec.End
+	// // replicas := cronJob.Spec.Replicas
+	// log.Info("my operator Reconcile called", time.Now().Local().Hour())
+	// log.Info(fmt.Sprintf("currentTIme: %d", currenHour), startTime, endTime, replicas)
+	// if currenHour >= startTime && currenHour < endTime {
+	// 	for _,deployment := cronJob.Spec.Deployments {
+	// 		err := r.Get(ctx,types.NamespacedName{
+	// 			Name: deploy.Name,
+	// 			Namespace:deploy.Namespace,
+	// 		},deployment)
+	// 		if err != nil {
+	// 			return ctrl.Result{},err
+	// 		}
+
+	// 		if deployment.Sepc.Replicas != replicas {
+
+	// 		}
+	// 	}
+	// }
+	return ctrl.Result{RequeueAfter: 10 * time.Second}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
