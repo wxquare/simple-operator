@@ -26,6 +26,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	batchv1 "github.com/wxquare/simple-operator/api/v1"
+	v1 "github.com/wxquare/simple-operator/api/v1"
+	"k8s.io/apimachinery/pkg/types"
+
+	k8sv1 "k8s.io/api/apps/v1"
 )
 
 // CronJobReconciler reconciles a CronJob object
@@ -50,37 +54,40 @@ type CronJobReconciler struct {
 func (r *CronJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 
-	// TODO(user): your logic here
-	// log := log.FromContext(ctx)
+	log.Info("my operator Reconcile called", "time", time.Now().Local())
 
-	// TODO(user): your logic here
-	log.Info("my operator Reconcile called", "time", time.Now().Local().Hour())
+	var cronJob v1.CronJob
+	if err := r.Get(ctx, req.NamespacedName, &cronJob); err != nil {
+		log.Error(err, "unable to fetch CronJob")
+		return ctrl.Result{RequeueAfter: 10 * time.Second}, client.IgnoreNotFound(err)
+	}
 
-	// var cronJob v1.CronJob
-	// if err := r.Get(ctx, req.NamespacedName, &cronJob); err != nil {
-	// 	log.Error(err, "unable to fetch CronJob")
-	// 	return ctrl.Result{RequeueAfter: 10 * time.Second}, client.IgnoreNotFound(err)
-	// }
-	// // startTime := cronJob.Spec.Start
-	// // endTime := cronJob.Spec.End
-	// // replicas := cronJob.Spec.Replicas
-	// log.Info("my operator Reconcile called", time.Now().Local().Hour())
-	// log.Info(fmt.Sprintf("currentTIme: %d", currenHour), startTime, endTime, replicas)
-	// if currenHour >= startTime && currenHour < endTime {
-	// 	for _,deployment := cronJob.Spec.Deployments {
-	// 		err := r.Get(ctx,types.NamespacedName{
-	// 			Name: deploy.Name,
-	// 			Namespace:deploy.Namespace,
-	// 		},deployment)
-	// 		if err != nil {
-	// 			return ctrl.Result{},err
-	// 		}
+	startTime := cronJob.Spec.Start
+	endTime := cronJob.Spec.End
+	replicas := cronJob.Spec.Replicas
+	currentHour := time.Now().Local().Hour()
+	log.Info("current Hour", "hour", time.Now().Local().Hour())
+	if currentHour >= startTime && currentHour < endTime {
+		for _, deploy := range cronJob.Spec.Deployments {
+			deployment := &k8sv1.Deployment{}
+			err := r.Get(ctx, types.NamespacedName{
+				Name:      deploy.Name,
+				Namespace: deploy.Namespace,
+			}, deployment)
+			if err != nil {
+				log.Error(err, "get errror")
+				return ctrl.Result{RequeueAfter: 10 * time.Second}, err
+			}
 
-	// 		if deployment.Sepc.Replicas != replicas {
-
-	// 		}
-	// 	}
-	// }
+			if *deployment.Spec.Replicas != replicas {
+				deployment.Spec.Replicas = &replicas
+				if err := r.Update(ctx, deployment); err != nil {
+					log.Error(err, "update error")
+					return ctrl.Result{RequeueAfter: 10 * time.Second}, err
+				}
+			}
+		}
+	}
 	return ctrl.Result{RequeueAfter: 10 * time.Second}, nil
 }
 

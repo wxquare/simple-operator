@@ -6,4 +6,11 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
   name: cronjob-sample
 spec:
-  # TODO(user): Add fields here
+  start: 20
+  end: 21
+  replicas: 8
+  deployments:
+    - name: dp-api-server
+      namespace: dp
+    - name: dp-item-server
+      namespace: dp
